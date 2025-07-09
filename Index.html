@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đặt sân bóng rổ</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1 { text-align: center; }
+    .schedule { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 30px; }
+    .hour-label { text-align: center; font-weight: bold; margin-top: 20px; }
+    .slot { padding: 10px; border: 1px solid #ccc; text-align: center; cursor: pointer; background-color: white; }
+    .booked { background-color: #fca; cursor: not-allowed; }
+    .slot:hover:not(.booked) { background-color: #def; }
+    form { max-width: 600px; margin: 30px auto; display: flex; flex-direction: column; gap: 10px; }
+    label { font-weight: bold; }
+    input, select, button { padding: 10px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>Đặt sân bóng rổ - 120.000đ/h</h1>
+
+  <form id="bookingForm">
+    <label>Họ và tên:</label>
+    <input type="text" name="name" required>
+
+    <label>Số điện thoại:</label>
+    <input type="tel" name="phone" required>
+
+    <label>Ngày đặt:</label>
+    <input type="date" name="date" required>
+
+    <label>Giờ bắt đầu (8h - 21h):</label>
+    <select name="startHour" required>
+      <!-- option sẽ được tạo bằng JS -->
+    </select>
+
+    <label>Số giờ đặt (tối đa 5h):</label>
+    <select name="duration" required>
+      <option value="1">1 giờ</option>
+      <option value="2">2 giờ</option>
+      <option value="3">3 giờ</option>
+      <option value="4">4 giờ</option>
+      <option value="5">5 giờ</option>
+    </select>
+
+    <button type="submit">Đặt sân</button>
+  </form>
+
+  <h2 class="hour-label">Khung giờ trong tuần</h2>
+  <div class="schedule" id="scheduleGrid">
+    <!-- Khung giờ được hiển thị ở đây bằng JS -->
+  </div>
+
+  <script>
+    const form = document.getElementById("bookingForm");
+    const startHourSelect = form.querySelector("select[name='startHour']");
+    const scheduleGrid = document.getElementById("scheduleGrid");
+
+    const bookedSlots = [
+      { day: 1, hour: 10 }, // Monday 10h
+      { day: 3, hour: 14 }, // Wednesday 14h
+      { day: 5, hour: 18 }, // Friday 18h
+    ];
+
+    const days = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+
+    // Tạo khung giờ 8h đến 22h mỗi ngày trong tuần
+    function renderSchedule() {
+      for (let hour = 8; hour <= 22; hour++) {
+        for (let day = 0; day < 7; day++) {
+          const div = document.createElement("div");
+          div.classList.add("slot");
+
+          const isBooked = bookedSlots.some(s => s.day === day && s.hour === hour);
+          if (isBooked) div.classList.add("booked");
+
+          div.innerText = `${days[day]} - ${hour}h`;
+          scheduleGrid.appendChild(div);
+        }
+      }
+    }
+
+    // Tạo các option giờ
+    for (let i = 8; i <= 21; i++) {
+      const option = document.createElement("option");
+      option.value = i;
+      option.textContent = `${i}:00`;
+      startHourSelect.appendChild(option);
+    }
+
+    renderSchedule();
+
+    form.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const data = {
+        name: formData.get("name"),
+        phone: formData.get("phone"),
+        date: formData.get("date"),
+        startHour: formData.get("startHour"),
+        duration: formData.get("duration")
+      };
+
+      // Gửi qua Formspree
+      try {
+        await fetch("https://formspree.io/f/mnqeyrpy", {
+          method: "POST",
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...data, _replyto: "vutoan122lklk@gmail.com" })
+        });
+        alert("Đặt sân thành công!");
+        form.reset();
+      } catch (err) {
+        alert("Lỗi khi gửi thông tin. Hãy thử lại.");
+      }
+    });
+  </script>
+</body>
+</html>
